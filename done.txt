@@ -1,0 +1,24 @@
+Diffuse lighting needs to be affected by the colour of the light. - Done :D
+
+Use interface for shapes and tidy up that stuff (eg, no need for angle for a sphere)
+-Done!
+
+quite a lot of problems with lights - I think some of the lighting effects aren't taking into account intensity of the light.
+- fixed :D Gloss and diffuse weren't taking into account the brightness of the light.
+
+Sunlight - a light source with only an angle defined, so all the scene will be lit effectively by an infinitely way away light source
+DONE
+
+cool idea: animation of sun rising and setting with shadows affecting the tree :D
+maybe change ambient lighting based on brightness of sunlight?
+DONE
+
+spheres in the joins of branches didn't work very well - new idea, change the angle of the base of the cylinder?
+changing base angle doesn't seem to be workign very well, two ideas: turn off phong and render high rez to see what's going on,
+DONE
+
+got seemless branches working well for continuing branches!
+-there is a problem where a few pixels seem to leak through: ideas, make cylinder extend poly and do some stuff so it's possible to extract the top points of the parent cylinder, so they do match up exactly.
+
+idea: side branches - need to do something with their thickness.  Keep their base thickness same as their tip thickness?
+DONE

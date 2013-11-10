@@ -1,0 +1,13 @@
+Plans to tidy up the rendering system:
+
+Collision will always return the base shape - eg a triangle from a polygon
+The fact that the triangles form part of a larger shape should ONLY be used to optimise collision detection
+This way a non-convex shape will be able to cast shadows on itself and have refraction work as one would expect
+
+As well as a currentN value passsed to a findColour method, a currentPower should also be passed.  To elaborate - when a reflection happens a ray is cast to find the colour of the reflected ray.  However, if the surface is only a little bit reflective, the result will be multiplied by a small number.  After successive reflections or refractions the ray may not actually influence the colour of the pixel we were originally interested in.  Therefore once the currentPower drops below a certain threshold, we don't cast any further rays.
+
+This could either be instead of, or suppliment the current, more crude, iteration limit.
+
+for optimisation purposes, and as a possible reminder in the right places - a shape can have a "isConvex()" method
+
+also getting rid of ignore because now the onsurfaceof stuff seems to work, there'sn o need for it and it just causes problems

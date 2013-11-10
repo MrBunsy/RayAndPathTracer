@@ -1,0 +1,129 @@
+{
+	"version" : Int,
+	"iterations" : Int,//optional
+	"name" : String, //optional
+	"lights" : [//optional
+		{
+			"pos" : { //this is a vector
+				"x" : Double,
+				"y" : Double,
+				"z" : Double
+			},
+			"intensity" : Double,
+			"colour" : {				//this is a colour //optional
+				"r" : Int,
+				"g" : Int,
+				"b" : Int
+			}
+		}
+	],
+	"sunlight" : {	//optional
+		"angle" : {vector},
+		"colour" : {colour},
+		"brightness" : double //0->1
+	}
+	"shapes" : [
+		{
+			"type" : "sphere",
+			"pos" : {vector},
+			"r" : Double,
+			"surface" : {				//this is a surface
+				"colour" : {colour},
+				"diffuse" : Double,		//optional
+				"gloss" : Double,		//optional
+				"clear" : Double,		//optional
+				"reflective" : Double,	//optional
+				"skybox" : Boolean,		//optional - transparent to sunlight
+				"n" : Double,			//optional
+				"texture" : {			//optional
+					"type": String, 	//"image","chess"
+					"stretch" : {		//optional
+						"x" : Double,
+						"y" : Double
+						},
+					"offset" : {		//optional
+						"x" : Double,
+						"y" : Double
+						},
+					"image" : String 	//required if type is image
+					},
+				"ambient" : Double		//optional
+			}
+		},
+		{
+			"type" : "triangle",
+			"v0" : {vector},
+			"v1" : {vector},
+			"v2" : {vector},
+			"surface" : {surface (see Sphere)}
+		},
+		{
+			"type" : "plane",
+			"pos" : {vector},
+			"angle" : {vector},
+			"surface" : {see Sphere}
+		},
+		{
+			"type" : "poly",
+			"polytype" : "general",		//optional?
+			"pos" : {vector},
+			"triangles" : [				//triangle positions are relative to pos
+				{
+					"v0": {vector},
+					"v1": {vector},
+					"v2": {vector},
+					"n0": {vector},		//optional
+					"n1": {vector},		//optional
+					"n2": {vector},		//optional
+				}
+			]
+			"surface" : {see Sphere}
+		},
+		{
+			"type" : "waterBlock",
+			"pos" : {vector},
+			"width" : Double,
+			"height": Double,
+			"depth" : Double,
+			"surface" : {surface}
+		},
+		{
+			"type" : "tree",
+			"pos" : {vector},
+			"angle" : {vector},
+			"growTo" : double,
+			"quality" : int,			//optional	number of segements to make cylinders from: 20 is default
+			"scale" : double,			//optional
+			"height" : double			//the height you want the final tree to be.  this will override scale
+			"gravity" : {vector},		//optional
+			"light" : {vector},			//optional
+			"wind" : {vector},			//optional
+			"seed" : long,				//optional
+			"density" : double,			//optional
+			"tipRadius" : double,		//optional
+			"elasticity" : double,		//optional
+			"branchChance" : double,	//optional
+			"muBranchLength" : double,	//optional
+			"sigmaBranchLength" : double,//optional
+			"minBranchLength" : double,	//optional
+			"growthRate" : double,		//optional
+			"growthRateChange" : double,//optional
+			"muNumChildren" : double,	//optional
+			"sigmaNumChildren" : double	//optional
+		}
+	],
+	"camera" : {
+		"pos" : {
+			"x" : Double,
+			"y" : Double,
+			"z" : Double
+		},
+		"dir" : {
+			"x" : Double,
+			"y" : Double,
+			"z" : Double
+		},
+		"lensDistance" : Double,
+		"lensSize" : Double
+	}
+}

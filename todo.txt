@@ -1,0 +1,101 @@
+Look into setting pixels on the image, see if faster than getting the graphics object and using that.
+
+Look into fields/other ways of defining 3D shapes
+-DONEish, gone down the triangles route
+
+
+Texture ideas: Have a texture angle and relative starting point?
+-done
+TRIANGLES still need support for textures
+
+
+with triangles, need a polyhedra shape which is solid but made out of triangles - should be able to do some cool stuff with refraction then!
+-needs fixing to work with clear, not sure what is broken atm
+
+
+ideas for tree joins: work out what was going on with the cylinder idea?
+Or, scrap it, go for this:
+Main branch is a cylinder all teh way, just not a straight one.
+Side branches, cylinder stops before it itersects with the main branch
+then, potentally oculd use collision detection to work out a shape to mould the two together?
+
+
+add quality of tree as an option to the json spec - controls number of polys used for the cylinders
+
+idea: abstract moving lights system even further to allow for a function which gives the x,y,z coords of a light based on a time, then allow multiple moving light sources?
+Would be quite funky, but is it more work than its worth?
+
+potential new plan for how to divvy up what goes to each thread to make more efficient use of cpu?
+
+big sphere that you can be inside - for a skybox?
+-collision detection with sphere from inside would also allow for optimised polygon collisions as they wouldn't have to check to see if you were too close to the sphere
+
+tidy up lighting in render.getPixelFromObject - currently code is duplicated for sunlight and other lights, it could easily be abstracted
+-DONE
+
+allow clear shapes to have a colour that works like a coloured light source - anything seen thorugh the shape has its colour multiplied by the colour of the shape
+
+Combine this with some sort of murkyness factor?  further through the material you go, the darker it becomes
+
+think it might be the surface normals causing less than idealness of the water? two corners are fine, the other two aren't
+
+idea: bump-mapping like idea for a water surface?  so the geometry is actually flat but its normals aren't.  VERY curious to see if this works
+-works rather well.
+
+animation: phase offset and optional decay?
+
+
+idea: auto-size of tree, get max height along the angle (dot with angle each absoluteposition of each child) and scale accordingly so the tree ends up at a specified height?
+
+idea: exporting polys, and a tree in a plant pot? plus bump mapping for the bricks and floor
+
+look into how the tree generator fixed php's camera and do that
+
+
+idea for caustics: photomap like before, but for each refractive shape, work out the appearance of that shape to the light source, and produce an even distributions of photosn as if from that light source.  would allow sunlight to work, and might be reasonably quick.
+
+how to do this: for sunlight: equation for how far a point is from a line, if it's a poly then this is relatively easy to check each vertex to find furthest away and then we have the area as viewed from the angle of the sunlight
+for a single lightsource, most extreme angle from lightsource to each vertex?
+encase all the photons from a single refractive shape in a sphere? or go and do proper BSP/octree?
+
+Consider a better technique than a square grid when dealing with spheres?
+
+for tidying up octrees - consider not allowing empty cubes? would mean variable number of cubes per cube
+
+tidy up stuff outputted to the console, also give progress bar or timings for generating the photon map?
+
+multi-threaded photon map generation!
+
+think I have an idea why some of the lighting from photon mapping looks wrong - without the clear shape the lighting would be from three differel ight sources with different angles, and then summed up.
+with photon mapping, the angle is averaged resulting in a single light source with a different angle.
+Not necessarily an easy solution to this.
+
+
+need to do - go through and carefully work out how to get rid of the little bodges here and there, that way things like water inside a cup should be possible, atm I think there will be problems with two refractive surfaces perfectly meeting
+and/or allow a refractive single surface? like a water layer at the top of a cup - will require much careful thinking
+
+
+idea!! instead of an inside bool, have a current refractive index argument?
+
+
+thoughts for better refractive index system:  Collision response also responds if a collision is on the outside or inside of a shape
+should be easy to do for a sphere and possible for triangle and plane (use the direction of normal)
+further idea - for water in a glass, have an inside n and an outside n? then the triangles at the edge of the glass that touch the water can have both
+
+idea for future shape - plane with a function that defines if a 2D point is inside or outside, then any flat shape which can be defined with such a function can be produced!
+
+photon map: detect when intensity of a ray is too low to bother firing it
+
+double for colour, then round to 8bit at the end?
+
+random distribution for sunlight too?
+-tried it, worked but decided against
+
+
+think the problem with the tumbler is that a ray leaving a shape can't then collide with taht shape again!
+-this appears to have been correct
+TODO remove the ignore argument from the renderer? consider tidying up the chaos with parentshapes?
+
+TODO power system for render like photon maps - so if the influence a ray is going to make is too small to be noticed, don't do it
+
+better idea than just returning black at the end of the iteration limit?  how about not fire off reflections/refractions and stick at current colour?
