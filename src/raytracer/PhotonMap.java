@@ -73,9 +73,9 @@ public class PhotonMap implements Serializable{
                 intensity += p.intensity;
                 dir = dir.add(p.dir);
                 colour = colour.add(p.colour);
-                r+=p.colour.r;
-                g+=p.colour.g;
-                b+=p.colour.b;
+                r+=p.colour.getIntR();
+                g+=p.colour.getIntG();
+                b+=p.colour.getIntB();
            // }
         }
         

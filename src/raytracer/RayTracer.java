@@ -180,6 +180,8 @@ public class RayTracer {
         Option noPhotonMapArg = parser.addBooleanOption('p', "noPhoton");
         Option skipArg = parser.addIntegerOption("skip");
         Option animationTypeArg = parser.addStringOption("animation");
+        Option pathTraceArg = parser.addBooleanOption("pathtrace");
+        Option samplesArg = parser.addIntegerOption("samples");
 
         try {
             parser.parse(args);
@@ -207,6 +209,8 @@ public class RayTracer {
 
         String loadPhotonMapName = (String) parser.getOptionValue(loadPhotonMapArg, "");
         boolean loadPhotonMap = !loadPhotonMapName.isEmpty();
+        boolean pathTrace = (Boolean)parser.getOptionValue(pathTraceArg,false);
+        int samples = (Integer)parser.getOptionValue(samplesArg, 256);
         //if we're scaling down the image later, scale up the rendered image
         width *= quality;
         height *= quality;
@@ -233,7 +237,12 @@ public class RayTracer {
         if (realtime) {
             //produce a real time version of the world
             Realtime r = new Realtime(world);
-        } else {
+        } else if(pathTrace){
+            PathTraceRender render = new PathTraceRender(world, threads, width, height,samples);//, progress);
+
+            render.saveImage(outputName, quality);
+        }
+        else{
 
             if (animate) {
                 if (animationType.equals("sunlight")) {

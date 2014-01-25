@@ -208,4 +208,20 @@ public class Surface {
         ambient=_ambient;
         return this;
     }
+    
+    public boolean isDiffuse(){
+        return diffuse > 0;
+    }
+    
+    public boolean isGloss(){
+        return gloss > 0;
+    }
+    
+    public double getDiffuse(){
+        return diffuse;
+    }
+    
+    public double getGloss(){
+        return gloss;
+    }
 }

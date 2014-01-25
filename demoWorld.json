@@ -1,0 +1,281 @@
+{
+	"version" : 2,
+	"iterations" : 5,
+	"name" : "Demonstration World",
+	"sunlight" : {
+		"angle" : {
+				"x" : 0,
+				"y" : 0,
+				"z" : 1
+			},
+		"colour" : {
+			"r" : 255,
+			"g" : 255,
+			"b" : 150
+		},
+		"brightness" : 0.3
+	},
+	"lights" : [
+		{
+			"pos" : {
+				"x" : 0,
+				"y" : -150,
+				"z" : 400
+			},
+			"intensity" : 50000,
+		},
+		{
+			"pos" : {
+				"x" : 500,
+				"y" : 250,
+				"z" : 400
+			},
+			"intensity" : 100000,
+		},
+		{
+			"pos" : {
+				"x" : -2000,
+				"y" : 250,
+				"z" : 700
+			},
+			"intensity" : 300000,
+		}
+	
+	],
+	"shapes" : [
+		{
+			"type" : "sphere",
+			"name" : "glass sphere",
+			"pos" : {
+				"x" : 11,
+				"y" : 0,
+				"z" : 60
+			},
+			"r" : 40,
+			"surface" : {
+				"colour" : {
+					"r" : 255,
+					"g" : 0,
+					"b" : 200
+				},
+				"diffuse" : 0,
+				"gloss" : 40,
+				"clear" : 1,
+				"reflective" : 0,
+				"n" : 1.4,
+				"ambient" : 0
+			}
+		},
+		{
+			"type" : "sphere",
+			"name" : "purpleSphere",
+			"pos" : {
+				"x" : 30,
+				"y" : 150,
+				"z" : 10
+			},
+			"r" : 30,
+			"surface" : {
+				"colour" : {
+					"r" : 255,
+					"g" : 0,
+					"b" : 200
+				},
+				"gloss" : 5
+			}
+		},
+		{
+			"type" : "sphere",
+			"name" : "red sphere",
+			"pos" : {
+				"x" : -120,
+				"y" : -130,
+				"z" : 15
+			},
+			"r" : 40,
+			"surface" : {
+				"colour" : {
+					"r" : 255,
+					"g" : 0,
+					"b" : 0
+				},
+				"gloss" : 3
+			}
+		},
+		{
+			"type" : "sphere",
+			"name" : "orange sphere",
+			"pos" : {
+				"x" : -160,
+				"y" : 100,
+				"z" : 90
+			},
+			"r" : 40,
+			"surface" : {
+				"colour" : {
+					"r" : 255,
+					"g" : 150,
+					"b" : 0
+				},
+				"gloss" : 60
+			}
+		},
+		{
+			"type" : "sphere",
+			"name" : "yellow sphere",
+			"pos" : {
+				"x" : 130,
+				"y" : -80,
+				"z" : 0
+			},
+			"r" : 30,
+			"surface" : {
+				"colour" : {
+					"r" : 255,
+					"g" : 255,
+					"b" : 0
+				},
+				"gloss" : 15
+			}
+		},
+		{
+			"type" : "sphere",
+			"name" : "green sphere",
+			"pos" : {
+				"x" : -200,
+				"y" : 300,
+				"z" : 20
+			},
+			"r" : 40,
+			"surface" : {
+				"colour" : {
+					"r" : 0,
+					"g" : 255,
+					"b" : 0
+				},
+				"gloss" : 4,
+				"reflective" : 0.2
+			}
+		},
+		{
+			"type" : "sphere",
+			"name" : "blue sphere",
+			"pos" : {
+				"x" : 0,
+				"y" : -220,
+				"z" : 100
+			},
+			"r" : 30,
+			"surface" : {
+				"colour" : {
+					"r" : 50,
+					"g" : 50,
+					"b" : 255
+				},
+				"gloss" : 10,
+				"reflective" : 0.2
+			}
+		},
+		{
+			"type" : "sphere",
+			"name" : "mirror sphere",
+			"pos" : {
+				"x" : -500,
+				"y" : -70,
+				"z" : 40
+			},
+			"r" : 70,
+			"surface" : {
+				"colour" : {
+					"r" : 50,
+					"g" : 50,
+					"b" : 255
+				},
+				"gloss" : 40,
+				"reflective" : 1
+			}
+		},
+		{
+			"type" : "plane",
+			"pos" : {
+				"x" : 0,
+				"y" : 0,
+				"z" : -30
+			},
+			"angle" : {
+				"x" : 0,
+				"y" : 0,
+				"z" : 1
+			},
+			"surface" : {
+				"colour" : {
+					"r" : 0,
+					"g" : 200,
+					"b" : 0
+				},
+				"diffuse" : 1,
+				"gloss" : 5,
+				"clear" : 0,
+				"reflective" : 0,
+				"n" : 1,
+				"texture" : {
+					"type" : "image",
+					"image" : "wood.jpg",
+					"stretch" : {
+						"x" : 2,
+						"y" : 2
+					}
+				},
+				"ambient" : 0.2
+			}
+		},
+		{
+			"type" : "plane",
+			"pos" : {
+				"x" : -600,
+				"y" : 0,
+				"z" : 0
+			},
+			"angle" : {
+				"x" : 1,
+				"y" : 0,
+				"z" : 0
+			},
+			"surface" : {
+				"colour" : {
+					"r" : 0,
+					"g" : 200,
+					"b" : 0
+				},
+				"diffuse" : 1,
+				"gloss" : 5,
+				"clear" : 0,
+				"reflective" : 0,
+				"n" : 1,
+				"texture" : {
+					"type" : "image",
+					"image" : "brick.jpg",
+					"stretch" : {
+						"x" : 2,
+						"y" : 2
+					}
+				},
+				"ambient" : 0.2
+			}
+		}
+	],
+	"camera" : {
+		"pos" : {
+			"x" : 500,
+			"y" : 0,
+			"z" : 300
+		},
+		"dir" : {
+			"x" : -1,
+			"y" : 0,
+			"z" : -0.5
+		},
+		"lensDistance" : 30,
+		"lensSize" : 32
+	}
+}

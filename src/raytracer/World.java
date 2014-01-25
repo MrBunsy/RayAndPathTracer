@@ -52,6 +52,10 @@ public class World {
         photonMap=_photonMap;
     }
     
+    /**
+     * Is this world sunlit?
+     * @return True is there is sunlight
+     */
     public boolean isSunlight(){
         return sunlight!=null;
     }
