@@ -162,7 +162,7 @@ public class PathTraceRender extends Render {
                     //return world.getSunlight().getColour().setIntensity(world.getSunlight().getBrightness());
                     LightPath l = new LightPath();
                     l.colour=world.getSunlight().getColour();
-                    l.distance=1;
+                    l.distance=0;
                     l.intensity=world.getSunlight().getBrightness();
                     return l;
                 }
@@ -219,8 +219,8 @@ public class PathTraceRender extends Render {
             }
             
             //TODO consider direct lighting?
-            Colour colour = directLighting(collision.with, normal, collisionPoint, surface, ray, texturePoint);            
-            //Colour colour = black;
+            //Colour colour = directLighting(collision.with, normal, collisionPoint, surface, ray, texturePoint);            
+            Colour colour = black;
             
             //if here we haven't hit a light...yet
            
@@ -339,10 +339,10 @@ public class PathTraceRender extends Render {
         } else {
             //no collision
 
-            if (world.isSunlight()) {
-                //check to see if this ray is in the direction of the sunlight
-                return world.getSunlight().getColour();
-            }
+//            if (world.isSunlight()) {
+//                //check to see if this ray is in the direction of the sunlight
+//                return world.getSunlight().getColour();
+//            }
 
             return black;
         }

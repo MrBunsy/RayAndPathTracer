@@ -1,6 +1,6 @@
 {
 	"version" : 2,
-	"iterations" : 5,
+	"iterations" : 20,
 	"name" : "Demonstration World",
 	"sunlight" : {
 		"angle" : {
@@ -13,7 +13,7 @@
 			"g" : 255,
 			"b" : 150
 		},
-		"brightness" : 0.6
+		"brightness" : 1
 	},
 	"shapes" : [
 		{
