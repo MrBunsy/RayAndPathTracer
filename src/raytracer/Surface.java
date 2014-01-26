@@ -235,6 +235,14 @@ public class Surface {
         return gloss > 0;
     }
     
+    public boolean isClear(){
+        return clear > 0;
+    }
+    
+    public boolean isReflective(){
+        return reflective > 0;
+    }
+    
     public double getDiffuse(){
         return diffuse;
     }

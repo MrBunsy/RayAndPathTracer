@@ -14,7 +14,7 @@ public class Colour implements Serializable{
     private double r,g,b;
     
     //used for this colour representing the colour of a light
-    private double intensity;
+    //private double intensity;
 
     public Color toColor(){
         //return new Color((int)Math.round(tidy(r)),(int)Math.round(tidy(g)),(int)Math.round(tidy(b)));
@@ -25,21 +25,21 @@ public class Colour implements Serializable{
         r=_r;
         g=_g;
         b=_b;
-        intensity=0;
+        //intensity=0;
     }
     
-    public double getIntensity(){
-        return intensity;
-    }
-    
-    public Colour setIntensity(double _intensity){
-        if(Double.isInfinite(_intensity)){
-            System.out.println("INFINITE");
-
-        }
-        intensity=_intensity;
-        return this;
-    }
+//    public double getIntensity(){
+//        return intensity;
+//    }
+//    
+//    public Colour setIntensity(double _intensity){
+//        if(Double.isInfinite(_intensity)){
+//            System.out.println("INFINITE");
+//
+//        }
+//        intensity=_intensity;
+//        return this;
+//    }
     
     public double getR(){
         return r;

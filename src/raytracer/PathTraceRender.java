@@ -20,154 +20,236 @@ public class PathTraceRender extends Render {
     public PathTraceRender(World _world, int _threads, int _width, int _height, int _samples) {
         super(_world, _threads, _width, _height);
         samples = _samples;
+        noLight = new LightPath();
+    }
+    
+    private LightPath noLight;
+    
+    
+    private LightPath findLight(Ray ray, int iteration, double currentN){
+        if(iteration <=0){
+            return noLight;
+        }
+        Collision collision = getNearestCollision(world, ray);
+
+        if (collision.collide) {
+            Surface surface = collision.with.getSurface();
+            Vector normal = collision.normal;
+            Vector collisionPoint = collision.where;
+            Vector texturePoint = collision.with.getParent().getTextureCoords(collisionPoint);
+            
+            if (surface.isLight()) {
+                //this surface belongs to a light
+
+                LightPath l = new LightPath();
+                //colour of the light
+                l.colour = surface.getColour(texturePoint);
+                
+                l.intensity = surface.getIntensity();
+                
+                l.distance = collisionPoint.subtract(ray.start).getMagnitude();
+                //that's it, we hit a light and have provided the brightness and colour of the light
+                //at the start of this ray
+                return l;
+            }
+            
+            //choose which ray to fire
+            
+            
+            if(surface.isDiffuse() || surface.isGloss() || surface.isReflective() || surface.isClear()){
+                //there is something else to do
+                
+                int doThis=0;
+                boolean foundValidRay=false;
+                //randomly choose which route to take
+                while(!foundValidRay){
+                    doThis=(int)Math.floor(Math.random()*4);
+                    if(doThis==0 && surface.isDiffuse()){
+                        foundValidRay=true;
+                    }
+                    if(doThis==1 && surface.isGloss()){
+                        foundValidRay=true;
+                    }
+                    if(doThis==2 && surface.isReflective()){
+                        foundValidRay=true;
+                    }
+                    if(doThis==3 && surface.isClear()){
+                        foundValidRay=true;
+                    }
+                }
+                
+                Vector rayDir=null;
+                
+                switch(doThis){
+                    case 0:
+                        //diffuse
+                        //bounce off in random direction in the direction of the surface normal
+                        rayDir = collision.normal.randomThisDirection();
+                        break;
+                    case 1:
+                        //gloss
+                        //limit the randomness of the bouncing ray to be 
+
+                        //get the direction of a reflected ray
+                        Vector r = ray.dir.subtract(normal.multiply(2 * normal.dot(ray.dir)));
+                        //note - this might self intersect?
+                        rayDir = r.randomThisDirection(Math.PI * Math.pow(0.5, surface.getGloss()), new Random());
+                        break;
+                    case 2:
+                        //reflect
+                        //get the direction of a reflected ray
+                        rayDir = ray.dir.subtract(normal.multiply(2 * normal.dot(ray.dir)));
+                        break;
+                    case 3:
+                        //refract
+                        double n1, n2;
+                        n1 = currentN;
+                        //if we are inside a shape, the other n is the outside world, otherwise we are in the outside world and the other n is the surface of the shape
+                        n2 = collision.inside ? (surface.hasOutsideN() ? surface.getOutsideN() : world.getAirN()) : surface.n;
+
+                        Refraction answers = refraction(n1, n2, normal, ray.dir);
+                        Vector refract = answers.refract;
+                        Vector reflect = answers.reflect;
+                        double T = answers.T;
+                        double R = answers.R;
+                        boolean tir = answers.tir();
+                        
+                        boolean doReflect = false;
+                        boolean doRefract=false;
+                        
+                        if(R > 0.002 && (!tir && T > 0.002)){
+                            //both reflection and refraction are possible. Choose
+                            if(Math.random() < 0.50){
+                                rayDir = reflect;
+                                currentN=n1;
+                            }else{
+                                rayDir = refract;
+                                currentN=n2;
+                            }
+                        }else{
+                            //only one (or none?) is possible
+                            if(R > 0.002){
+                                rayDir = reflect;
+                                currentN=n1;
+                            }else{
+                            //if((!tir && T > 0.002)){
+                                rayDir = refract;
+                                currentN=n2;
+                            }
+                        } 
+                        break;
+                }
+
+                Ray continuedRay = new Ray(collisionPoint, rayDir);
+                continuedRay.onSurfaceOf = collision.with;
+                
+                LightPath p = findLight(continuedRay, iteration-1, currentN);
+               
+                //TODO take into account reducing intensity as a result of non-perfect reflections and 
+                //http://en.wikipedia.org/wiki/Lambert%27s_cosine_law
+                p.distance+=collisionPoint.subtract(ray.start).getMagnitude();
+                
+                return p;
+            }
+            
+            
+        }else{
+            //no collision
+            if (world.isSunlight()) {
+                //check to see if this ray is in the direction of the sunlight
+                if (world.getSunlight().getAngle().dot(ray.dir) > 0) {
+                    //in direction of sunlight!
+                    //return world.getSunlight().getColour().setIntensity(world.getSunlight().getBrightness());
+                    LightPath l = new LightPath();
+                    l.colour=world.getSunlight().getColour();
+                    l.distance=1;
+                    l.intensity=world.getSunlight().getBrightness();
+                    return l;
+                }
+            }
+        }
+        
+        return noLight;
     }
 
     /**
      * Fire off a ray and see what colour it produces
+     *
+     * currently this is being bodged so it's basically returning a light -
+     * using intensity in the colour intensity is actually being used backwards
+     * - it's the brightness at the point where renderRay was called
+     *
      * @param ray
      * @param iteration decrease for each recursion, so we don't go forever
      * @param currentN value of n for current medium ray is in
      * @param currentPower power of this light
-     * @return 
+     * @return
      */
+    @Override
     public Colour renderRay(Ray ray, int iteration, double currentN, double currentPower) {
         if (iteration <= 0 || currentPower < 0.002) {
             return black;
         }
-        
-        Colour rendered= black;
-        
+
         /*
-        
-        Plan:
-        
-        compute direct lighting as per normal
-        
-        //then fire off ray to compute indirect lighting
-        
-        hit a diffuse surface - fire ray in random direction that is in hemisphere of surface normal
-        (non-negative dot product)
-        
-        glossy surface - fire ray in direction of cone which is centred around the reflection
-        size of cone decreases with increased glossyness
-        how about pi*(0.5^gloss) for max angle?
-        
-        mirror - reflection as per normal
-        
-        I think light sources are going to require a physical presence? (will direct lighting for each ray resolve this?)
-        
-        this returned ray is used as information on the brightness and colour of light (using the direct lighting for what it hit)
-        
-        TODO
-        need options for "just find me this path" - find route to a light source
-        and "find direct lighting and indirect lighitng"
-        
-        light sources will need a physical presence!
-        
-        combine the two 
-        
-        // surface * lighting
-        vec3 tcol = scol * (dcol + icol);
-        where scol is surface colour, d=direct and i=indirect
-        
-        says http://www.iquilezles.org/www/articles/simplepathtracing/simplepathtracing.htm
-        
+        Find a shape
+        if its surface is diffuse or gloss, compute lighting for it by firing off an lightPath request.
+        if it is reflective or refractive, fire off another (set) of render rays as appropriet (like conventional raytracing)
         */
+        
+        Colour rendered = black;
+
         //this finds the nearest collision
         Collision collision = getNearestCollision(world, ray);//, ignore);
 
         if (collision.collide) {
-            
-            /*
-            We have found a surface - what we need to do is:
-             - fire off a ray randomly to see if it will eventually hit a light source
-             - use the result of that ray to light this surface in the conventional way
-            
-             - maybe also combine with direct lighting?
-            (direct lighting might not mean much if lighting surfaces are being used)
-            
-            */
-            
-            
+
             Surface surface = collision.with.getSurface();
             Vector normal = collision.normal;
             Vector collisionPoint = collision.where;
             Vector texturePoint = collision.with.getParent().getTextureCoords(collisionPoint);
             
             //Colour directLighting = directLighting(collision.with, normal, collisionPoint, surface, ray, texturePoint);
-            
             //reflection and refraction
             //Colour bouncedLighting = new Colour(0,0,0);
-            
-            
-            if(surface.isLight()){
+            if (surface.isLight()) {
                 //this surface belongs to a light
-                
-                //return how much light there would be at the beginning of this ray
-                
-                double distance=collisionPoint.subtract(ray.start).getMagnitude();
 
-//                if(distance==0){
-//                    distance=1;
-//                }
-                distance = Math.max(1, distance);
-                //1/r^2
-                Colour c = surface.getColour(texturePoint);
-                //our brightness becomes the next ray's intensity.  hopefully.
-                c.setIntensity(surface.getIntensity()/Math.pow(distance,2));
-                if(Double.isInfinite(c.getIntensity())){
-                    System.out.println("INFINITE");
-
-                }
-                //that's it, we hit a light and have provided the brightness and colour of the light
-                //at the start of this ray
-                return c;
+               return surface.getColour(texturePoint);
             }
+            
+            //TODO consider direct lighting?
+            Colour colour = directLighting(collision.with, normal, collisionPoint, surface, ray, texturePoint);            
+            //Colour colour = black;
+            
             //if here we haven't hit a light...yet
-            //but we can assume the ray we sent off did (if it didn't it'll return black, so all will be well)
-            
-            Colour result= black;
-            
-            //do reflection and refraction - both will just fire off more rays too add to the path to the light
-            //this is to find the intensity and colour of the light at this collision point
-            
-            Colour collisionPointLight=black;
-            
-            //atm this is straight copied from overriden render, TODO abstract out
+           
+            Colour collisionPointLight = black;
+
+            boolean intensityTest = false;
+
             if (surface.reflective > 0) {//!inside && 
                 //this surface is slightly reflective
                 //d=incomming vector, n=normal, r= reflected
                 //r=d - 2(n.d)n
                 //bounce a ray off and see where it goes!
                 Vector r = ray.dir.subtract(normal.multiply(2 * normal.dot(ray.dir)));
-                Ray reflectedRay = new Ray(collisionPoint, r);
-                //mentioning the specific shape we're on the surface of.
-                reflectedRay.onSurfaceOf = collision.with;
-                Colour reflectedLight = renderRay(reflectedRay, iteration - 1, currentN, currentPower * surface.reflective);
-                
-                //TODO clear up brightness/intensity - for now the returned 'intensity' is assumed to be the brightness at the point
-                //the ray originated from
-                double brightness = reflectedLight.getIntensity();
-                
-                
-                Colour reflectedColour = colourFromLight(surface, normal, brightness , normal, rendered, result, normal);
-                
-                reflectedColour = reflectedColour.dim(surface.reflective);
-//                result = result.add(tempColour);
-                //intensity here is actually the brightness caused by intensity of what the reflected ray hit
-                //should really rename it
-                collisionPointLight.add(reflectedColour.dim(reflectedColour.getIntensity()));
-                
-                
-                
-                collisionPointLight.setIntensity(collisionPointLight.getIntensity()+reflectedColour.getIntensity());
-                if(Double.isInfinite(collisionPointLight.getIntensity())){
-                    System.out.println("INFINITE");
 
-                }
+                Ray reflectedRay = new Ray(collisionPoint, r);
+
+                //no longer ignoring shapes
+                //ArrayList<Shape> inSceneArray = new ArrayList<Shape>();
+                //inSceneArray.add(parentShape);
+                //instead mentioning the specific shape we're on the surface of.
+                //slightly hackyish
+                reflectedRay.onSurfaceOf = collision.with;
+
+                Colour reflectedColour = renderRay(reflectedRay, iteration - 1, currentN, currentPower * surface.reflective);//inSceneArray,
+
+                Colour tempColour = reflectedColour.dim(surface.reflective);
+                colour = colour.add(tempColour);
             }
-            
-            
+
             if (surface.clear > 0) {
                 double n1, n2;
                 //TODO, look at dispersion where different colours refract at different angles
@@ -188,126 +270,83 @@ public class PathTraceRender extends Render {
                 if (R > 0.002) {
 
                     Ray reflectedRay = new Ray(collisionPoint, reflect);
+
                     reflectedRay.onSurfaceOf = collision.with;
-                    
+
                     //TODO work out if this strange insideShape thing is needed
                     //we have hit a clear shape, and there is a small amount of reflection, this is calculating the colour returned from the reflected ray
-                    Colour reflectedColour = this.renderRay(reflectedRay, iteration - 1, n1, currentPower * R);
-                    
+                    Colour reflectedColour = this.renderRay(reflectedRay, iteration - 1, n1, currentPower * R);//ignore,
+
                     //adjust the colours by the relative powers of the refracted and reflected light
                     reflectedColour = reflectedColour.dim(R);
-                    //multiplying these colours by how much the shape is clear - no idea if this is physically accurate!
-                    //directLighting = directLighting.add(reflectedColour.dim(surface.clear));
-                    collisionPointLight = collisionPointLight.add(reflectedColour.dim(reflectedColour.getIntensity()));
-                    collisionPointLight.setIntensity(collisionPointLight.getIntensity()+reflectedColour.getIntensity());
-                    
-                    if(Double.isInfinite(collisionPointLight.getIntensity())){
-                    System.out.println("INFINITE");
 
-                }
+                    //multiplying these colours by how much the shape is clear - no idea if this is physically accurate!
+                    colour = colour.add(reflectedColour.dim(surface.clear));
                 }
 
                 if (!tir && T > 0.002) {
+
                     Ray refractedRay = new Ray(collisionPoint, refract);
                     refractedRay.onSurfaceOf = collision.with;
+
                     Colour refractedColour = this.renderRay(refractedRay, iteration - 1, n2, currentPower * T);//ignore,
                     refractedColour = refractedColour.dim(T);
-                    //directLighting = directLighting.add(refractedColour.dim(surface.clear));
-                    collisionPointLight = collisionPointLight.add(refractedColour.dim(refractedColour.getIntensity()));
-                    collisionPointLight.setIntensity(collisionPointLight.getIntensity()+refractedColour.getIntensity());
-                    
-                    if(Double.isInfinite(collisionPointLight.getIntensity())){
-                    System.out.println("INFINITE");
+                    colour = colour.add(refractedColour.dim(surface.clear));
+                }
 
-                }
-                }
             }
-            
-            
-            
+
             //indirect lighting, reflection and refraction have been dealt with, light sources have been found,
             //this is where it is all put together
             Vector rayDir = null;
             Colour indirectColour = black;
-            if(surface.isDiffuse()){
+            //do diffuse if surface isn't gloss, otherwise only do it half the time if surface is gloss too
+            if (surface.isDiffuse() && (!surface.isGloss() || Math.random()<0.5)) {
                 //bounce off in random direction in the direction of the surface normal
-               rayDir = collision.normal.randomThisDirection();
-            }else if(surface.isGloss()){
+                rayDir = collision.normal.randomThisDirection();
+            } else if (surface.isGloss()) {
                 //limit the randomness of the bouncing ray to be 
-                
+
                 //get the direction of a reflected ray
                 Vector r = ray.dir.subtract(normal.multiply(2 * normal.dot(ray.dir)));
                 //note - this might self intersect?
-               rayDir = r.randomThisDirection(Math.PI*Math.pow(0.2,surface.getGloss()), new Random());
-               
-              
+                rayDir = r.randomThisDirection(Math.PI * Math.pow(0.2, surface.getGloss()), new Random());
+
             }
-            
+
             //now we have the pathtracing search for light based on diffuse/gloss
             //and the search for light based on reflection and refraction
             //pool all these together to find the brightness and colour of the light
-            
-            if(rayDir!=null){
+            if (rayDir != null) {
                 //System.out.println(rayDir);
                 Ray indirectRay = new Ray(collisionPoint, rayDir);
                 //TODO work out real value to reduce power by
                 //is power actually used by anything anymore?  should it be?
-                indirectColour = this.renderRay(indirectRay, iteration - 1,  currentN, currentPower);
-                //lambert's cosine law
-                //the radiant intensity or luminous intensity observed from an ideal diffusely reflecting surface or ideal diffuse radiator is directly proportional to the cosine of the angle θ between the observer's line of sight and the surface normal
-                //and
-                // the irradiance (energy or photons/time/area) landing on that area element will be proportional to the cosine of the angle between the illuminating source and the normal
                 
-                //so only taking into account the latter
-                double brightness = indirectRay.dir.dot(normal);
+                LightPath p = findLight(indirectRay, iteration, currentN);
                 
-                if(Double.isInfinite(brightness)){
-                    System.out.println("INFINITE");
-                }
+                double brightness = p.intensity/Math.pow(p.distance,2);
                 
-                collisionPointLight = collisionPointLight.add(indirectColour.dim(brightness*indirectColour.getIntensity()));
-                collisionPointLight.setIntensity(collisionPointLight.getIntensity()+indirectColour.getIntensity());
+                Colour indirectLit = colourFromLight(surface, normal, brightness, indirectRay.dir.multiply(-1.0), surface.getColour(collisionPoint), p.colour, ray.dir);
                 
-                if(Double.isInfinite(collisionPointLight.getIntensity())){
-                    System.out.println("INFINITE");
-
-                }
+                //this is essentially another light source
+                colour = colour.add(indirectLit);
             }
-            
-            //now we know what the lighting is at the collision point, work out the brightness of this light for the
-            //position the ray initiates from
-            
-            double distance=collisionPoint.subtract(ray.start).getMagnitude();
 
-            distance = Math.max(1,distance);
-            //1/r^2
-            //our brightness becomes the next ray's intensity.  hopefully.
             
-            double intensity = collisionPointLight.getIntensity()/Math.pow(distance,2);
-            
-            if(Double.isInfinite(intensity)){
-                System.out.println("INFINITE");
-            }
-            
-            collisionPointLight.setIntensity(intensity);
-            
-            return collisionPointLight;
-            
+            return colour;
+
         } else {
             //no collision
-            
-            if(world.isSunlight()){
+
+            if (world.isSunlight()) {
                 //check to see if this ray is in the direction of the sunlight
-                if(world.getSunlight().getAngle().dot(ray.dir) > 0){
-                    //in direction of sunlight!
-                    return world.getSunlight().getColour().setIntensity(world.getSunlight().getBrightness());
-                }
+                return world.getSunlight().getColour();
             }
-            
+
             return black;
         }
 
-        
         //return black;
     }
 
@@ -345,8 +384,8 @@ public class PathTraceRender extends Render {
                     Vector p = topLeft.add(dx, x + sectionWidth * section).add(dy, y);
 
                     //random variation for AA
-                    p=p.add(dx, Math.random());
-                    p=p.add(dy, Math.random());
+                    p = p.add(dx, Math.random());
+                    p = p.add(dy, Math.random());
 
                     Vector rayDirection = p.subtract(world.camera.pos);
 
@@ -361,11 +400,11 @@ public class PathTraceRender extends Render {
                 r /= (double) samples;
                 g /= (double) samples;
                 b /= (double) samples;
-                
+
                 Colour c = new Colour(r, g, b);
-                
+
                 //now stick the pixel on the image
-                setPixel(_g,c , x, y);
+                setPixel(_g, c, x, y);
             }
 
             renderedPixels(height);
@@ -373,4 +412,17 @@ public class PathTraceRender extends Render {
         }
 
     }
+}
+
+class LightPath{
+    
+    public LightPath(){
+        colour = new Colour(0,0,0);
+        distance = 1;
+        intensity = 0;
+    }
+    
+    public Colour colour;
+    public double distance;
+    public double intensity;
 }
