@@ -26,6 +26,8 @@ public class Surface {
     private double outsideN;
     private boolean hasOutsideN;
     
+    //is this surface a light? (only relevent for path tracer)
+    private double intensity;
     
     public Colour colour;
 
@@ -124,6 +126,13 @@ public class Surface {
         return glass;
     }
     
+    public static Surface light(double _intensity){
+        Surface light = new Surface((new Colour(255,255,255)));
+        light.setIntensity(_intensity);
+        
+        return light;
+    }
+    
 //    public Texture getTexture(){
 //        return texture;
 //    }
@@ -139,6 +148,10 @@ public class Surface {
     public Surface setSkybox(boolean _skybox){
         skybox=_skybox;
         return this;
+    }
+    
+    public boolean isLight(){
+        return intensity > 0;
     }
     
     public Surface setDiffuse(double _diffuse){
@@ -209,6 +222,11 @@ public class Surface {
         return this;
     }
     
+    public Surface setIntensity(double _intensity){
+        intensity=_intensity;
+        return this;
+    }
+    
     public boolean isDiffuse(){
         return diffuse > 0;
     }
@@ -223,5 +241,9 @@ public class Surface {
     
     public double getGloss(){
         return gloss;
+    }
+    
+    public double getIntensity(){
+        return intensity;
     }
 }

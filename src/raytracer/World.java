@@ -113,6 +113,11 @@ public class World {
             surface.setSkybox(jsurface.getBoolean("skybox"));
         }
         
+        //light for pathtracer
+        if(jsurface.has("intensity")){
+            surface.setIntensity(jsurface.getDouble("intensity"));
+        }
+        
         if(jsurface.has("texture")){
             
             JSONObject jtexture = jsurface.getJSONObject("texture");

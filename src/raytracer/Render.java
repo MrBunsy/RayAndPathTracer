@@ -652,7 +652,10 @@ public class Render {
      * @param y y-coord of pixel
      */
     public synchronized void setPixel(Graphics2D _g, Colour colour, int x, int y) {
-        _g.setColor(colour.toColor());
+        
+        Color color = colour.toColor();
+        
+        _g.setColor(color);
         _g.fillRect(x, y, 1, 1);
     }
 

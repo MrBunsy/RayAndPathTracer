@@ -12,15 +12,33 @@ public class Colour implements Serializable{
 //    public int b;
     
     private double r,g,b;
+    
+    //used for this colour representing the colour of a light
+    private double intensity;
 
     public Color toColor(){
-        return new Color((int)Math.round(tidy(r)),(int)Math.round(tidy(g)),(int)Math.round(tidy(b)));
+        //return new Color((int)Math.round(tidy(r)),(int)Math.round(tidy(g)),(int)Math.round(tidy(b)));
+        return new Color((float)r/255.0f,(float)g/255.0f,(float)b/255.0f);
     }
     
     public Colour(double _r,double _g,double _b){
         r=_r;
         g=_g;
         b=_b;
+        intensity=0;
+    }
+    
+    public double getIntensity(){
+        return intensity;
+    }
+    
+    public Colour setIntensity(double _intensity){
+        if(Double.isInfinite(_intensity)){
+            System.out.println("INFINITE");
+
+        }
+        intensity=_intensity;
+        return this;
     }
     
     public double getR(){
