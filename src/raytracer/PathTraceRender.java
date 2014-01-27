@@ -325,9 +325,11 @@ public class PathTraceRender extends Render {
                 
                 LightPath p = findLight(indirectRay, iteration, currentN);
                 
-                double brightness = p.intensity/Math.pow(p.distance,2);
+                double distance = Math.max(1,p.distance);
                 
-                Colour indirectLit = colourFromLight(surface, normal, brightness, indirectRay.dir.multiply(-1.0), surface.getColour(collisionPoint), p.colour, ray.dir);
+                double brightness = p.intensity/Math.pow(distance,2);
+                
+                Colour indirectLit = colourFromLight(surface, normal, brightness, indirectRay.dir, surface.getColour(collisionPoint), p.colour, ray.dir);
                 
                 //this is essentially another light source
                 colour = colour.add(indirectLit);

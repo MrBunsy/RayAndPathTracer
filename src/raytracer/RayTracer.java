@@ -218,6 +218,7 @@ public class RayTracer {
         World world;
         try {
             System.out.print("Loading world...");
+            System.out.println(new File(".").getAbsolutePath());
             world = World.importJSON(readFile(worldFile));
             System.out.print("\rLoaded world: " + world.name + "\n");
         } catch (IOException ex) {
