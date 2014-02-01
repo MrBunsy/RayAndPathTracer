@@ -25,7 +25,13 @@ public class PathTraceRender extends Render {
     
     private LightPath noLight;
     
-    
+    /**
+     * Firing a ray off into the unknown, we want to find the brightness and colour of the light falling at the start of the original ray
+     * @param ray
+     * @param iteration
+     * @param currentN
+     * @return 
+     */
     private LightPath findLight(Ray ray, int iteration, double currentN){
         if(iteration <=0){
             return noLight;
@@ -45,9 +51,11 @@ public class PathTraceRender extends Render {
                 //colour of the light
                 l.colour = surface.getColour(texturePoint);
                 
-                l.intensity = surface.getIntensity();
+                double distance = collisionPoint.subtract(ray.start).getMagnitude();
                 
-                l.distance = collisionPoint.subtract(ray.start).getMagnitude();
+                l.brightness = surface.getIntensity()/Math.pow(2,distance);
+                
+//                l.distance = collisionPoint.subtract(ray.start).getMagnitude();
                 //that's it, we hit a light and have provided the brightness and colour of the light
                 //at the start of this ray
                 return l;
@@ -77,7 +85,9 @@ public class PathTraceRender extends Render {
                         foundValidRay=true;
                     }
                 }
-                
+                if (surface.isClear()){
+                    doThis=3;
+                }
                 Vector rayDir=null;
                 
                 switch(doThis){
@@ -93,7 +103,9 @@ public class PathTraceRender extends Render {
                         //get the direction of a reflected ray
                         Vector r = ray.dir.subtract(normal.multiply(2 * normal.dot(ray.dir)));
                         //note - this might self intersect?
-                        rayDir = r.randomThisDirection(Math.PI * Math.pow(0.5, surface.getGloss()), new Random());
+                        rayDir = r.randomThisDirection(getGlossMaxAngle(surface.getGloss()), new Random());
+                        
+                        //rayDir = collision.normal.randomThisDirection();
                         break;
                     case 2:
                         //reflect
@@ -119,7 +131,7 @@ public class PathTraceRender extends Render {
                         
                         if(R > 0.002 && (!tir && T > 0.002)){
                             //both reflection and refraction are possible. Choose
-                            if(Math.random() < 0.50){
+                            if(Math.random() < R){
                                 rayDir = reflect;
                                 currentN=n1;
                             }else{
@@ -139,15 +151,33 @@ public class PathTraceRender extends Render {
                         } 
                         break;
                 }
-
+                //rayDir = collision.normal.randomThisDirection();
+                //rayDir = new Vector(Math.random()-0.5,Math.random()-0.5,Math.random()-0.5);
                 Ray continuedRay = new Ray(collisionPoint, rayDir);
                 continuedRay.onSurfaceOf = collision.with;
                 
+                //we have found what is lighting this other surface
                 LightPath p = findLight(continuedRay, iteration-1, currentN);
                
+                //now found how this other surface lights the start of ray
+                
+                double distance = collisionPoint.subtract(ray.start).getMagnitude();
+                
+                double intensity = p.brightness;
+                
+                switch(doThis){
+                    case 0:
+                    case 1:
+                        //diffuse and gloss lighting
+                        intensity*=Math.cos(normal.dot(rayDir)*normal.dot(ray.dir));
+                        break;
+                }
                 //TODO take into account reducing intensity as a result of non-perfect reflections and 
                 //http://en.wikipedia.org/wiki/Lambert%27s_cosine_law
-                p.distance+=collisionPoint.subtract(ray.start).getMagnitude();
+                //cos is symetric about x=0, so sign (&therefore direction of normal/ray) doesn't matter
+                
+                
+                p.brightness = intensity/Math.pow(2,distance);
                 
                 return p;
             }
@@ -162,8 +192,7 @@ public class PathTraceRender extends Render {
                     //return world.getSunlight().getColour().setIntensity(world.getSunlight().getBrightness());
                     LightPath l = new LightPath();
                     l.colour=world.getSunlight().getColour();
-                    l.distance=0;
-                    l.intensity=world.getSunlight().getBrightness();
+                    l.brightness=world.getSunlight().getBrightness();
                     return l;
                 }
             }
@@ -173,11 +202,16 @@ public class PathTraceRender extends Render {
     }
 
     /**
+     * Given the gloss of a surface, return the maximum angle in rads of deviation from the reflection
+     * @param gloss
+     * @return 
+     */
+    private double getGlossMaxAngle(double gloss){
+        return Math.PI*0.5 /Math.log10(gloss);
+    }
+    
+    /**
      * Fire off a ray and see what colour it produces
-     *
-     * currently this is being bodged so it's basically returning a light -
-     * using intensity in the colour intensity is actually being used backwards
-     * - it's the brightness at the point where renderRay was called
      *
      * @param ray
      * @param iteration decrease for each recursion, so we don't go forever
@@ -224,12 +258,12 @@ public class PathTraceRender extends Render {
             
             //if here we haven't hit a light...yet
            
-            Colour collisionPointLight = black;
+            //Colour collisionPointLight = black;
 
-            boolean intensityTest = false;
+            //boolean intensityTest = false;
 
             if (surface.reflective > 0) {//!inside && 
-                //this surface is slightly reflective
+                //this surface is at least slightly reflective
                 //d=incomming vector, n=normal, r= reflected
                 //r=d - 2(n.d)n
                 //bounce a ray off and see where it goes!
@@ -299,7 +333,7 @@ public class PathTraceRender extends Render {
             //indirect lighting, reflection and refraction have been dealt with, light sources have been found,
             //this is where it is all put together
             Vector rayDir = null;
-            Colour indirectColour = black;
+           // Colour indirectColour = black;
             //do diffuse if surface isn't gloss, otherwise only do it half the time if surface is gloss too
             if (surface.isDiffuse() && (!surface.isGloss() || Math.random()<0.5)) {
                 //bounce off in random direction in the direction of the surface normal
@@ -310,10 +344,10 @@ public class PathTraceRender extends Render {
                 //get the direction of a reflected ray
                 Vector r = ray.dir.subtract(normal.multiply(2 * normal.dot(ray.dir)));
                 //note - this might self intersect?
-                rayDir = r.randomThisDirection(Math.PI * Math.pow(0.2, surface.getGloss()), new Random());
+                rayDir = r.randomThisDirection(getGlossMaxAngle(surface.getGloss()), new Random());
 
             }
-
+            //colour=black;
             //now we have the pathtracing search for light based on diffuse/gloss
             //and the search for light based on reflection and refraction
             //pool all these together to find the brightness and colour of the light
@@ -325,12 +359,17 @@ public class PathTraceRender extends Render {
                 
                 LightPath p = findLight(indirectRay, iteration, currentN);
                 
-                double distance = Math.max(1,p.distance);
+                //double distance = Math.max(1,p.distance);
                 
-                double brightness = p.intensity/Math.pow(distance,2);
+                double brightness = p.brightness;//p.LightPath.this.brightness/Math.pow(distance,2);
                 
-                Colour indirectLit = colourFromLight(surface, normal, brightness, indirectRay.dir, surface.getColour(collisionPoint), p.colour, ray.dir);
+                Surface noGlossSurface = surface.getCopy();
+                noGlossSurface.setGloss(0);
+                //gloss should now be taken into account by the indirect lighting mechanism, no need to do it here
+                Colour indirectLit = colourFromLight(noGlossSurface, normal, brightness, indirectRay.dir, surface.getColour(texturePoint), p.colour, ray.dir);
                 
+                
+                indirectLit=indirectLit.dim(surface.getDiffuse());
                 //this is essentially another light source
                 colour = colour.add(indirectLit);
             }
@@ -420,11 +459,11 @@ class LightPath{
     
     public LightPath(){
         colour = new Colour(0,0,0);
-        distance = 1;
-        intensity = 0;
+        //distance = 1;
+        brightness = 0;
     }
     
     public Colour colour;
-    public double distance;
-    public double intensity;
+    //public double distance;
+    public double brightness;
 }

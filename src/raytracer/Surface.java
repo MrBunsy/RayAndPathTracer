@@ -254,4 +254,22 @@ public class Surface {
     public double getIntensity(){
         return intensity;
     }
+    
+    public Surface getCopy(){
+        Surface s =new Surface(colour);
+        
+        s.setAmbient(ambient);
+        s.setClear(clear);
+        //s.setColour(colour);
+        s.setDiffuse(diffuse);
+        s.setGloss(gloss);
+        s.setIntensity(intensity);
+        s.setOutsideN(outsideN);
+        s.setReflective(reflective);
+        s.setSkybox(skybox);
+        s.setTexture(texture);
+        s.setn(n);
+        
+        return s;
+    }
 }
